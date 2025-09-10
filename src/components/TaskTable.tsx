@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../store/hook";
 import { fetchTasks, deleteTask } from "../store/taskReducer";
 import { Task } from "../types/task";
@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "./ui/table";
 import { Badge } from "./ui/badge";
+import DeleteTaskDialog from "./DeleteTaskDialog";
 import { Edit, Trash2, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "react-toastify";
@@ -24,35 +25,50 @@ interface TaskTableProps {
 const TaskTable: React.FC<TaskTableProps> = ({ onEditTask, onAddTask }) => {
   const dispatch = useAppDispatch();
   const { tasks, loading, error } = useAppSelector((state) => state.tasks);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
 
   useEffect(() => {
     dispatch(fetchTasks());
   }, [dispatch]);
 
-  const handleDeleteTask = async (id: number) => {
-    if (window.confirm("Are you sure you want to delete this task?")) {
-      try {
-        await dispatch(deleteTask(id)).unwrap();
-        toast.success("🗑️ Task deleted successfully!", {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
-      } catch (error) {
-        console.error("Error deleting task:", error);
-        toast.error("❌ Failed to delete task. Please try again.", {
-          position: "top-right",
-          autoClose: 4000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
-      }
+  const handleDeleteClick = (task: Task) => {
+    setTaskToDelete(task);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!taskToDelete) return;
+
+    try {
+      await dispatch(deleteTask(taskToDelete.id)).unwrap();
+      toast.success("🗑️ Task deleted successfully!", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      toast.error("❌ Failed to delete task. Please try again.", {
+        position: "top-right",
+        autoClose: 4000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } finally {
+      setDeleteDialogOpen(false);
+      setTaskToDelete(null);
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setTaskToDelete(null);
   };
 
   const getStatusBadgeVariant = (status: string) => {
@@ -110,87 +126,96 @@ const TaskTable: React.FC<TaskTableProps> = ({ onEditTask, onAddTask }) => {
       </div>
 
       <div className="rounded-xl border border-gray-200 shadow-sm bg-white overflow-hidden">
-        <Table>
-          <TableHeader className="bg-gray-50/50">
-            <TableRow className="border-b border-gray-200">
-              <TableHead className="font-semibold text-gray-700">
-                Client Name
-              </TableHead>
-              <TableHead className="font-semibold text-gray-700">
-                Description
-              </TableHead>
-              <TableHead className="font-semibold text-gray-700">
-                Status
-              </TableHead>
-              <TableHead className="font-semibold text-gray-700">
-                Created At
-              </TableHead>
-              <TableHead className="text-right font-semibold text-gray-700">
-                Actions
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {tasks.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={5}
-                  className="text-center py-8 text-gray-500"
-                >
-                  No tasks found. Create your first task!
-                </TableCell>
+        <div className="max-h-[600px] overflow-y-auto">
+          <Table>
+            <TableHeader className="bg-gray-50/50 sticky top-0 z-10">
+              <TableRow className="border-b border-gray-200">
+                <TableHead className="font-semibold text-gray-700">
+                  Client Name
+                </TableHead>
+                <TableHead className="font-semibold text-gray-700">
+                  Description
+                </TableHead>
+                <TableHead className="font-semibold text-gray-700">
+                  Status
+                </TableHead>
+                <TableHead className="font-semibold text-gray-700">
+                  Created At
+                </TableHead>
+                <TableHead className="text-right font-semibold text-gray-700">
+                  Actions
+                </TableHead>
               </TableRow>
-            ) : (
-              tasks.map((task) => (
-                <TableRow key={task.id}>
-                  <TableCell className="font-medium">
-                    {task.clientName}
-                  </TableCell>
-                  <TableCell className="max-w-xs truncate">
-                    {task.description}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={getStatusBadgeVariant(task.status)}
-                      className={getStatusColor(task.status)}
-                    >
-                      {task.status.replace("-", " ").toUpperCase()}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {task.createdAt &&
-                    !isNaN(new Date(task.createdAt).getTime())
-                      ? format(new Date(task.createdAt), "MMM dd, yyyy HH:mm")
-                      : "No date"}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onEditTask(task)}
-                        className="flex items-center gap-1"
-                      >
-                        <Edit className="h-3 w-3" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteTask(task.id)}
-                        className="flex items-center gap-1 text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                        Delete
-                      </Button>
-                    </div>
+            </TableHeader>
+            <TableBody>
+              {tasks.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="text-center py-8 text-gray-500"
+                  >
+                    No tasks found. Create your first task!
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                tasks.map((task) => (
+                  <TableRow key={task.id}>
+                    <TableCell className="font-medium">
+                      {task.clientName}
+                    </TableCell>
+                    <TableCell className="max-w-xs truncate">
+                      {task.description}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={getStatusBadgeVariant(task.status)}
+                        className={getStatusColor(task.status)}
+                      >
+                        {task.status.replace("-", " ").toUpperCase()}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {task.createdAt &&
+                      !isNaN(new Date(task.createdAt).getTime())
+                        ? format(new Date(task.createdAt), "MMM dd, yyyy HH:mm")
+                        : "No date"}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onEditTask(task)}
+                          className="flex items-center gap-1"
+                        >
+                          <Edit className="h-3 w-3" />
+                          Edit
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteClick(task)}
+                          className="flex items-center gap-1 text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          Delete
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
+
+      <DeleteTaskDialog
+        isOpen={deleteDialogOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        task={taskToDelete}
+      />
     </div>
   );
 };
