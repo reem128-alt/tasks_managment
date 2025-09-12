@@ -12,8 +12,15 @@ import {
   TableRow,
 } from "./ui/table";
 import { Badge } from "./ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 import DeleteTaskDialog from "./DeleteTaskDialog";
-import { Edit, Trash2, Plus } from "lucide-react";
+import { Edit, Trash2, Plus, Filter } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "react-toastify";
 
@@ -27,10 +34,17 @@ const TaskTable: React.FC<TaskTableProps> = ({ onEditTask, onAddTask }) => {
   const { tasks, loading, error } = useAppSelector((state) => state.tasks);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   useEffect(() => {
     dispatch(fetchTasks());
   }, [dispatch]);
+
+  // Filter tasks based on selected status
+  const filteredTasks = tasks.filter((task) => {
+    if (statusFilter === "all") return true;
+    return task.status === statusFilter;
+  });
 
   const handleDeleteClick = (task: Task) => {
     setTaskToDelete(task);
@@ -115,7 +129,24 @@ const TaskTable: React.FC<TaskTableProps> = ({ onEditTask, onAddTask }) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <Filter className="h-5 w-5 text-gray-600" />
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent className="bg-white">
+              <SelectItem value="all">All Tasks</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="in-progress">In Progress</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+            </SelectContent>
+          </Select>
+          <span className="text-sm text-gray-600">
+            {filteredTasks.length} of {tasks.length} tasks
+          </span>
+        </div>
         <Button
           onClick={onAddTask}
           className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
@@ -148,17 +179,19 @@ const TaskTable: React.FC<TaskTableProps> = ({ onEditTask, onAddTask }) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {tasks.length === 0 ? (
+              {filteredTasks.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={5}
                     className="text-center py-8 text-gray-500"
                   >
-                    No tasks found. Create your first task!
+                    {tasks.length === 0
+                      ? "No tasks found. Create your first task!"
+                      : `No tasks found with status "${statusFilter}". Try a different filter.`}
                   </TableCell>
                 </TableRow>
               ) : (
-                tasks.map((task) => (
+                filteredTasks.map((task) => (
                   <TableRow key={task.id}>
                     <TableCell className="font-medium">
                       {task.clientName}
