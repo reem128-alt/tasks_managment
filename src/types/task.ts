@@ -1,5 +1,5 @@
 export interface Task {
-  id: number;
+  id: string;
   clientName: string;
   description: string;
   status: "pending" | "in-progress" | "completed";
@@ -13,7 +13,7 @@ export interface CreateTaskData {
 }
 
 export interface UpdateTaskData extends Partial<CreateTaskData> {
-  id: number;
+  id: string;
 }
 
 export interface TaskFormData {

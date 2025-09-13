@@ -1,40 +1,30 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { Task, CreateTaskData, UpdateTaskData } from "../types/task";
-import axios from "axios";
+import { jsonService } from "../utils/jsonService";
 
-// Async thunks for API calls
+// Async thunks for JSON service calls
 export const fetchTasks = createAsyncThunk("tasks/fetchTasks", async () => {
-  const response = await axios.get("http://localhost:3001/tasks");
-  return response.data;
+  return await jsonService.fetchTasks();
 });
 
 export const createTask = createAsyncThunk(
   "tasks/createTask",
   async (taskData: CreateTaskData) => {
-    const response = await axios.post("http://localhost:3001/tasks", {
-      ...taskData,
-      createdAt: new Date().toISOString(),
-    });
-    return response.data;
+    return await jsonService.createTask(taskData);
   }
 );
 
 export const updateTask = createAsyncThunk(
   "tasks/updateTask",
   async (taskData: UpdateTaskData) => {
-    const { id, ...updateData } = taskData;
-    const response = await axios.put(
-      `http://localhost:3001/tasks/${id}`,
-      updateData
-    );
-    return response.data;
+    return await jsonService.updateTask(taskData);
   }
 );
 
 export const deleteTask = createAsyncThunk(
   "tasks/deleteTask",
-  async (id: number) => {
-    await axios.delete(`http://localhost:3001/tasks/${id}`);
+  async (id: string) => {
+    await jsonService.deleteTask(id);
     return id;
   }
 );
@@ -110,7 +100,7 @@ const taskSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(deleteTask.fulfilled, (state, action: PayloadAction<number>) => {
+      .addCase(deleteTask.fulfilled, (state, action: PayloadAction<string>) => {
         state.loading = false;
         state.tasks = state.tasks.filter((task) => task.id !== action.payload);
       })

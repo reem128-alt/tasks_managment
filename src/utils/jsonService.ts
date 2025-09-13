@@ -1,0 +1,201 @@
+import { Task, CreateTaskData, UpdateTaskData } from "../types/task";
+
+// Simple in-memory storage for tasks
+// In a real app, you might want to use localStorage or IndexedDB
+let tasks: Task[] = [
+  {
+    id: "3",
+    clientName: "Mike Johnson",
+    description: "Implement user authentication system",
+    status: "completed",
+    createdAt: "2024-01-14T09:15:00Z"
+  },
+  {
+    id: "4",
+    clientName: "Sarah Williams",
+    description: "Design and implement responsive dashboard layout",
+    status: "pending",
+    createdAt: "2024-01-15T10:30:00Z"
+  },
+  {
+    id: "5",
+    clientName: "David Chen",
+    description: "Create API endpoints for task management",
+    status: "in-progress",
+    createdAt: "2024-01-15T14:20:00Z"
+  },
+  {
+    id: "6",
+    clientName: "Emily Rodriguez",
+    description: "Set up database migrations and seed data",
+    status: "completed",
+    createdAt: "2024-01-16T08:45:00Z"
+  },
+  {
+    id: "7",
+    clientName: "James Thompson",
+    description: "Implement real-time notifications system",
+    status: "pending",
+    createdAt: "2024-01-16T11:15:00Z"
+  },
+  {
+    id: "8",
+    clientName: "Lisa Anderson",
+    description: "Create user profile management interface",
+    status: "in-progress",
+    createdAt: "2024-01-17T09:00:00Z"
+  },
+  {
+    id: "9",
+    clientName: "Robert Martinez",
+    description: "Optimize database queries for better performance",
+    status: "completed",
+    createdAt: "2024-01-17T13:30:00Z"
+  },
+  {
+    id: "10",
+    clientName: "Jennifer Lee",
+    description: "Implement file upload functionality with validation",
+    status: "pending",
+    createdAt: "2024-01-18T10:45:00Z"
+  },
+  {
+    id: "11",
+    clientName: "Michael Brown",
+    description: "Create comprehensive test suite for all components",
+    status: "in-progress",
+    createdAt: "2024-01-18T15:20:00Z"
+  },
+  {
+    id: "12",
+    clientName: "Amanda Taylor",
+    description: "Design and implement dark mode theme",
+    status: "pending",
+    createdAt: "2024-01-19T08:30:00Z"
+  },
+  {
+    id: "13",
+    clientName: "Christopher Wilson",
+    description: "Set up CI/CD pipeline for automated deployment",
+    status: "completed",
+    createdAt: "2024-01-19T12:15:00Z"
+  },
+  {
+    id: "14",
+    clientName: "Michelle Garcia",
+    description: "Implement advanced search and filtering capabilities",
+    status: "in-progress",
+    createdAt: "2024-01-20T09:45:00Z"
+  },
+  {
+    id: "15",
+    clientName: "Daniel Moore",
+    description: "Create data export functionality in multiple formats",
+    status: "pending",
+    createdAt: "2024-01-20T14:00:00Z"
+  },
+  {
+    id: "16",
+    clientName: "Ashley Jackson",
+    description: "Implement role-based access control system",
+    status: "completed",
+    createdAt: "2024-01-21T10:30:00Z"
+  },
+  {
+    id: "17",
+    clientName: "Kevin White",
+    description: "Create mobile-responsive design for all components",
+    status: "in-progress",
+    createdAt: "2024-01-21T16:15:00Z"
+  },
+  {
+    id: "18",
+    clientName: "Nicole Harris",
+    description: "Implement audit logging for all user actions",
+    status: "pending",
+    createdAt: "2024-01-22T11:00:00Z"
+  },
+  {
+    id: "19",
+    clientName: "Ryan Clark",
+    description: "Set up monitoring and error tracking system",
+    status: "completed",
+    createdAt: "2024-01-22T13:45:00Z"
+  },
+  {
+    id: "20",
+    clientName: "Stephanie Lewis",
+    description: "Create comprehensive documentation and user guides",
+    status: "in-progress",
+    createdAt: "2024-01-23T09:20:00Z"
+  }
+];
+
+// Generate a unique ID
+const generateId = (): string => {
+  return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+};
+
+// Simulate async operations with delays
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+export const jsonService = {
+  // Fetch all tasks
+  async fetchTasks(): Promise<Task[]> {
+    await delay(300); // Simulate network delay
+    return [...tasks];
+  },
+
+  // Create a new task
+  async createTask(taskData: CreateTaskData): Promise<Task> {
+    await delay(300); // Simulate network delay
+    
+    const newTask: Task = {
+      id: generateId(),
+      ...taskData,
+      createdAt: new Date().toISOString(),
+    };
+    
+    tasks.push(newTask);
+    return newTask;
+  },
+
+  // Update an existing task
+  async updateTask(taskData: UpdateTaskData): Promise<Task> {
+    await delay(300); // Simulate network delay
+    
+    const { id, ...updateData } = taskData;
+    const taskIndex = tasks.findIndex(task => task.id === id);
+    
+    if (taskIndex === -1) {
+      throw new Error(`Task with id ${id} not found`);
+    }
+    
+    const updatedTask: Task = {
+      ...tasks[taskIndex],
+      ...updateData,
+    };
+    
+    tasks[taskIndex] = updatedTask;
+    return updatedTask;
+  },
+
+  // Delete a task
+  async deleteTask(id: string): Promise<void> {
+    await delay(300); // Simulate network delay
+    
+    const taskIndex = tasks.findIndex(task => task.id === id);
+    
+    if (taskIndex === -1) {
+      throw new Error(`Task with id ${id} not found`);
+    }
+    
+    tasks.splice(taskIndex, 1);
+  },
+
+  // Get a task by ID
+  async getTaskById(id: string): Promise<Task | null> {
+    await delay(100); // Simulate network delay
+    return tasks.find(task => task.id === id) || null;
+  }
+};
